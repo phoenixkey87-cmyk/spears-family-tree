@@ -284,6 +284,35 @@ input[type="text"]:focus {
   background: #ddd;
   color: #333;
 }
+.btn-edit {
+  background: #6b4226;
+  color: #fdf8f0;
+}
+.btn-delete {
+  background: #a03030;
+  color: #fff;
+}
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.modal-tab {
+  flex: 1;
+  padding: 6px;
+  text-align: center;
+  font-size: 12px;
+  border: 1px solid #c8a882;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  font-family: Georgia, serif;
+}
+.modal-tab.active {
+  background: #3d1f0e;
+  color: #fdf8f0;
+  border-color: #3d1f0e;
+}
 </style>
 </head>
 <body>
@@ -570,18 +599,25 @@ input[type="text"]:focus {
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <h3 id="modal-title">Add family member under:</h3>
-    <label>Name</label>
-    <input type="text" id="modal-name" placeholder="Enter name...">
-    <label>Relationship</label>
-    <select id="modal-relation">
-      <option value="son">Son</option>
-      <option value="daughter">Daughter</option>
-      <option value="grandson">Grandson</option>
-      <option value="granddaughter">Granddaughter</option>
-    </select>
-    <div class="modal-buttons">
+    <div id="modal-add-section">
+      <label>Name</label>
+      <input type="text" id="modal-name" placeholder="Enter name...">
+      <label>Relationship</label>
+      <select id="modal-relation">
+        <option value="son">Son</option>
+        <option value="daughter">Daughter</option>
+        <option value="grandson">Grandson</option>
+        <option value="granddaughter">Granddaughter</option>
+      </select>
+    </div>
+    <div class="modal-buttons" id="modal-buttons-add">
       <button class="btn-cancel" id="modal-cancel">Cancel</button>
-      <button class="btn-add" id="modal-add">Add</button>
+      <button class="btn-add" id="modal-add">Add Child</button>
+    </div>
+    <div class="modal-buttons" id="modal-buttons-edit" style="display:none;">
+      <button class="btn-cancel" id="modal-cancel2">Cancel</button>
+      <button class="btn-edit" id="modal-edit">Save Edit</button>
+      <button class="btn-delete" id="modal-delete">Delete</button>
     </div>
   </div>
 </div>
@@ -677,7 +713,14 @@ var modalName = document.getElementById('modal-name');
 var modalRelation = document.getElementById('modal-relation');
 var modalAdd = document.getElementById('modal-add');
 var modalCancel = document.getElementById('modal-cancel');
+var modalCancel2 = document.getElementById('modal-cancel2');
+var modalEdit = document.getElementById('modal-edit');
+var modalDelete = document.getElementById('modal-delete');
+var modalAddSection = document.getElementById('modal-add-section');
+var modalButtonsAdd = document.getElementById('modal-buttons-add');
+var modalButtonsEdit = document.getElementById('modal-buttons-edit');
 var selectedParent = null;
+var editMode = false;
 
 // Make all .child spans clickable
 function makeClickable() {
@@ -691,24 +734,59 @@ function makeClickable() {
 function openModal(e) {
   selectedParent = e.target;
   var name = selectedParent.textContent.trim();
-  modalTitle.textContent = 'Add family member under: ' + name;
+  editMode = false;
+  
+  // Show both options: add child OR edit/delete this name
+  modalTitle.textContent = name;
   modalName.value = '';
+  modalAddSection.style.display = 'block';
+  modalButtonsAdd.style.display = 'flex';
+  modalButtonsEdit.style.display = 'flex';
+  modalName.placeholder = 'Add child name...';
+  
   modalOverlay.classList.add('active');
   setTimeout(function() { modalName.focus(); }, 100);
 }
 
-modalCancel.addEventListener('click', function() {
+function closeModal() {
   modalOverlay.classList.remove('active');
   selectedParent = null;
-});
+  editMode = false;
+}
+
+modalCancel.addEventListener('click', closeModal);
+modalCancel2.addEventListener('click', closeModal);
 
 modalOverlay.addEventListener('click', function(e) {
-  if (e.target === modalOverlay) {
-    modalOverlay.classList.remove('active');
-    selectedParent = null;
-  }
+  if (e.target === modalOverlay) closeModal();
 });
 
+// EDIT name
+modalEdit.addEventListener('click', function() {
+  if (!selectedParent) return;
+  var currentName = selectedParent.textContent.trim();
+  var newName = prompt('Edit name:', currentName);
+  if (newName && newName.trim() !== '') {
+    selectedParent.textContent = newName.trim();
+    saveAddedNames();
+    showSaveStatus();
+  }
+  closeModal();
+});
+
+// DELETE name
+modalDelete.addEventListener('click', function() {
+  if (!selectedParent) return;
+  var name = selectedParent.textContent.trim();
+  if (confirm('Remove "' + name + '" from the tree?')) {
+    selectedParent.remove();
+    saveAddedNames();
+    showSaveStatus();
+  }
+  closeModal();
+});
+
+// ADD child
 modalAdd.addEventListener('click', addFamilyMember);
 modalName.addEventListener('keypress', function(e) {
   if (e.key === 'Enter') addFamilyMember();
