@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spears Family Tree</title>
+<style>
+@page { size: letter; margin: 0.5in; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Georgia', serif;
+  background: #fdf8f0;
+  color: #2c1810;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 {
+  text-align: center;
+  font-size: 36px;
+  color: #3d1f0e;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  border-bottom: 4px double #3d1f0e;
+  padding-bottom: 10px;
+}
+.subtitle {
+  text-align: center;
+  font-size: 16px;
+  font-style: italic;
+  color: #6b4226;
+  margin-bottom: 25px;
+}
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.generation {
+  width: 100%;
+  margin-bottom: 15px;
+}
+.gen-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #6b4226;
+  border-bottom: 2px solid #c8a882;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.gen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.family-group {
+  padding: 8px 12px;
+  border-left: 3px solid #8b5e3c;
+  background: rgba(200,168,130,0.1);
+  border-radius: 0 6px 6px 0;
+}
+.couple {
+  font-size: 15px;
+  font-weight: bold;
+  color: #3d1f0e;
+  margin-bottom: 4px;
+}
+.couple .spouse {
+  font-size: 12px;
+  color: #8b5e3c;
+  font-weight: normal;
+  font-style: italic;
+}
+.children-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
+.child {
+  font-size: 12px;
+  padding: 2px 6px;
+  background: #f5ebe0;
+  border: 1px solid #c8a882;
+  border-radius: 3px;
+}
+.child.deceased { color: #999; font-style: italic; }
+.sub-section {
+  padding-left: 12px;
+  margin-top: 5px;
+  border-left: 1px dotted #c8a882;
+}
+.sub-label {
+  font-size: 10px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  margin-top: 4px;
+}
+.note { font-size: 11px; color: #888; font-style: italic; }
+.grandchildren-space {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed #c8a882;
+  font-size: 10px;
+  color: #999;
+}
+.add-line {
+  margin: 3px 0;
+}
+.add-line input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  background: transparent;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  padding: 3px 0;
+  height: 20px;
+}
+.connector {
+  text-align: center;
+  font-size: 18px;
+  color: #8b5e3c;
+  margin: 3px 0;
+}
+.roots-box {
+  text-align: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3d1f0e, #6b4226);
+  color: #fdf8f0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+.roots-box .names { font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+.roots-box .location { font-size: 13px; font-style: italic; margin-top: 4px; opacity: 0.9; }
+.future-gen {
+  border: 2px dashed #c8a882;
+  border-radius: 6px;
+  padding: 10px;
+  background: rgba(255,255,255,0.6);
+}
+.future-gen h3 {
+  color: #8b5e3c;
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.write-lines { display: flex; flex-direction: column; gap: 12px; }
+.write-line { border-bottom: 1px solid #bbb; height: 20px; }
+.scripture {
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+  color: #6b4226;
+  margin-top: 25px;
+  padding: 15px;
+  border-top: 2px solid #c8a882;
+}
+.instructions {
+  text-align: center;
+  font-size: 11px;
+  color: #999;
+  margin-top: 10px;
+  font-style: italic;
+}
+/* Mobile responsive */
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  h1 { font-size: 24px; letter-spacing: 2px; }
+  .subtitle { font-size: 13px; }
+  .gen-grid { grid-template-columns: 1fr; }
+  .roots-box { padding: 10px 15px; }
+  .roots-box .names { font-size: 18px; }
+  .family-group { padding: 10px; }
+  .couple { font-size: 14px; }
+  .child { font-size: 11px; padding: 3px 6px; }
+  .future-gen { padding: 12px; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .gen-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* Touch-friendly inputs */
+input[type="text"] {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  border-radius: 0;
+}
+input[type="text"]:focus {
+  border-bottom-color: #8b5e3c !important;
+  background: rgba(200,168,130,0.05) !important;
+}
+/* Save indicator */
+.save-status {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  background: #3d1f0e;
+  color: #fdf8f0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: Georgia, serif;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 999;
+}
+.save-status.show { opacity: 1; }
+</style>
+</head>
+<body>
+<h1>Spears Family</h1>
+<p class="subtitle">"Even so every good tree bringeth forth good fruit" &mdash; Matthew 7:17a</p>
+
+<div class="tree-container">
+
+<!-- ROOTS -->
+<div class="generation">
+  <div class="roots-box">
+    <div class="names">Mingo Spears &amp; Priscilla</div>
+    <div class="location">Liberty, Mississippi &bull; The Root of Our Family</div>
+  </div>
+</div>
+<div class="connector">&#9660;</div>
+
+<!-- GENERATION 2 -->
+<div class="generation">
+  <div class="gen-label">Second Generation &mdash; Children of Mingo &amp; Priscilla (5 Sons, 6 Daughters)</div>
+  <div class="gen-grid">
+
+    <div class="family-group">
+      <div class="couple">Mingo Spears Sr. <span class="spouse">m. Mary Maxwell</span></div>
+      <div class="children-list">
+        <span class="child">Earl</span><span class="child">Eddie</span><span class="child">Matthew</span><span class="child">Mingo Jr.</span><span class="child">Allen</span><span class="child">Rosetta (Hogue)</span><span class="child">Etta (Burton)</span><span class="child">Hettie (Parker)</span><span class="child">Lena (Ferguson)</span>
+      </div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Willie Spears</div>
+      <div class="children-list"><span class="child deceased">Willie Jr.</span><span class="child">1 daughter (unknown)</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Robert Spears</div>
+      <div class="note">Moved to Shelby, Mississippi</div>
+      <div class="children-list"><span class="child">Elizabeth</span><span class="child">Beulah</span><span class="child">Sam</span><span class="child">(2 others unknown)</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Allen Spears</div>
+      <div class="children-list"><span class="child">Louis</span><span class="child">Walter</span><span class="child deceased">Lucille</span><span class="child deceased">Luberta</span><span class="child deceased">Maddie</span><span class="child deceased">Amelia</span><span class="child deceased">Robert</span><span class="child deceased">Lafayette</span><span class="child deceased">Willie</span><span class="child deceased">Inez</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Emma (Spears) Holden</div>
+      <div class="children-list"><span class="child deceased">Andrew</span><span class="child deceased">Gorow</span><span class="child deceased">Louise</span><span class="child deceased">Pinkie</span><span class="child deceased">Willie</span></div>
+      <div class="sub-section">
+        <div class="sub-label">Andrew's children include</div>
+        <div class="children-list"><span class="child">Emma Holden Lambert</span><span class="child">Barbara Lambert</span><span class="child">Ernestine Byrd</span></div>
+      </div>
+      <div class="grandchildren-space">Add more:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Fannie (Spears) Griffin/Butler</div>
+      <div class="children-list"><span class="child deceased">Isado</span><span class="child deceased">Mable</span><span class="child deceased">Jerome</span><span class="child deceased">Krozen</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Mollie (Spears) Butler Tobias</div>
+      <div class="children-list"><span class="child deceased">Mary Jane</span><span class="child deceased">John</span><span class="child deceased">Rodger</span><span class="child deceased">Alney</span><span class="child deceased">Andrew</span><span class="child deceased">Earl</span><span class="child deceased">Benjamin</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Lizzie (Spears) Tucker</div>
+      <div class="children-list"><span class="child">Pinkie</span><span class="child deceased">Katie</span><span class="child deceased">Hattie</span><span class="child deceased">Emerson</span><span class="child deceased">Andrew</span><span class="child deceased">Mary</span><span class="child deceased">Charles</span><span class="child deceased">Julia</span><span class="child deceased">Lucille</span><span class="child deceased">Latten</span><span class="child deceased">Able</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Rosa (Spears) Harrell</div>
+      <div class="children-list"><span class="child deceased">Mozell</span><span class="child deceased">Jake</span><span class="child deceased">Joseph</span><span class="child deceased">Mary Ella</span><span class="child deceased">Joyce Ann</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Lottie (Spears) Stroud <span class="spouse">m. Albert Stroud</span></div>
+      <div class="note">Ypsilanti, Michigan &bull; 1891&ndash;1961</div>
+      <div class="children-list"><span class="child deceased">Rose Stroud Kersey</span><span class="child deceased">Percy</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="connector">&#9660;</div>
+
+<!-- CHARLIE'S CHILDREN (separate section) -->
+<div class="generation">
+  <div class="gen-label">Charlie Spears Branch <span style="font-weight:normal; font-size:11px;">&mdash; m. (1) Mattie Walls (2) Bertha Avery</span></div>
+  <div class="gen-grid">
+
+    <div class="family-group">
+      <div class="couple">Mamie (Ford)</div>
+      <div class="children-list"><span class="child">Joe Ford</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Francis (McNair)</div>
+      <div class="children-list"><span class="child">Grover Taplin</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Lillian (Williams)</div>
+      <div class="grandchildren-space">Children:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Curtis</div>
+      <div class="children-list"><span class="child">Barbara Whitted</span><span class="child">Curtis Spears Jr.</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">L.B.</div>
+      <div class="grandchildren-space">Children:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Otis</div>
+      <div class="children-list"><span class="child">Harry Otis</span><span class="child">Homer G. Phillips</span><span class="child">Dunn</span><span class="child">Alowia Juengain</span><span class="child">Vernita Keith</span><span class="child">Lorraine Wright</span><span class="child">Maria Hurst</span><span class="child">Ahlettah Berry</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Charles Jr.</div>
+      <div class="children-list"><span class="child">Charles Edward</span><span class="child">Larue</span><span class="child">William</span><span class="child">Rodell</span><span class="child">Alvin</span><span class="child">Ruth Gloria</span><span class="child">Cheryl</span></div>
+      <div class="sub-section">
+        <div class="sub-label">Grandchildren</div>
+        <div class="children-list"><span class="child">Demetrius Luster</span><span class="child">Anthony Luster</span><span class="child">Raymond Holmes</span><span class="child">Markeila Luster</span><span class="child">Cherray Holmes</span></div>
+      </div>
+      <div class="grandchildren-space">Add more:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Albert</div>
+      <div class="children-list"><span class="child">Laurel Yancey</span><span class="child">Janet Henry</span><span class="child">Catherine Watts</span><span class="child">Nancy Hamilton</span><span class="child">Karen Ellis</span><span class="child">Vincent Ellis</span><span class="child">Albert Jr.</span><span class="child">Jeffrey Spears</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Glenn</div>
+      <div class="children-list"><span class="child">Allen Spears</span><span class="child">Glen P. Spears II</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Lucille (Johnson)</div>
+      <div class="note">no children</div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Julia Mae (Jolley)</div>
+      <div class="children-list"><span class="child">Christine Cannon</span><span class="child">Corrine Woolfolk</span><span class="child">Mary Ellen Williams</span><span class="child">Eugene Jolley</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Georgia (Ashcraft)</div>
+      <div class="children-list"><span class="child">Marcella Burney</span><span class="child">Henry</span><span class="child">Barbara</span><span class="child">Carlos</span><span class="child">Ola</span><span class="child">Louise</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Myrtis (Roberson)</div>
+      <div class="children-list"><span class="child">Lawrence Mahon</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Louise (Beavers)</div>
+      <div class="children-list"><span class="child">Arcella Hayden</span></div>
+      <div class="sub-section">
+        <div class="sub-label">Arcella's children</div>
+        <div class="children-list"><span class="child">Marsha</span><span class="child">Sheila</span><span class="child">Sharallel</span></div>
+        <div class="sub-label">Great-grandchildren</div>
+        <div class="children-list"><span class="child">Keydra</span><span class="child">LaKeia</span><span class="child">Robert</span><span class="child">Sharea</span><span class="child">LaKeysha</span></div>
+        <div class="sub-label">Great-great-grandchildren</div>
+        <div class="children-list"><span class="child">Jaden</span><span class="child">Aniya</span><span class="child">Lailah</span><span class="child deceased">Jurnee</span><span class="child">Drew</span></div>
+      </div>
+      <div class="grandchildren-space">Add more:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Ahmed (Whittaker)</div>
+      <div class="children-list"><span class="child">Richard</span><span class="child">Iris</span><span class="child">Sharon</span><span class="child">Emmett</span><span class="child">James</span><span class="child">Kenneth</span><span class="child">Michael</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+    <div class="family-group">
+      <div class="couple">Ruth (Moore)</div>
+      <div class="children-list"><span class="child">Marilyn</span><span class="child">Wayne</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="connector">&#9660;</div>
+
+<!-- GENERATION 3: Mingo Sr. & Mary Maxwell -->
+<div class="generation">
+  <div class="gen-label">Third Generation &mdash; Children of Mingo Sr. &amp; Mary Maxwell</div>
+  <div class="gen-grid">
+    <div class="family-group">
+      <div class="couple">Matthew Spears <span class="spouse">m. Ethel</span></div>
+      <div class="children-list"><span class="child">Dorothy</span><span class="child">Christine</span><span class="child">Minnie</span><span class="child">George</span><span class="child">Johnny</span><span class="child">Joseph</span><span class="child">Bill</span><span class="child">James</span><span class="child">Timothy</span><span class="child">Matthew Jr.</span><span class="child">Albert Lee</span><span class="child">Geraldine</span><span class="child">Richard</span></div>
+      <div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div>
+    </div>
+    <div class="family-group"><div class="couple">Earl</div><div class="note">3 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Eddie</div><div class="note">3 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Mingo Jr.</div><div class="note">6 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Allen</div><div class="note">6 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Rosetta (Hogue)</div><div class="note">1 child</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Etta (Burton)</div><div class="note">14 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Hettie (Parker)</div><div class="note">4 children</div><div class="grandchildren-space">Grandchildren:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+    <div class="family-group"><div class="couple">Lena (Ferguson)</div><div class="grandchildren-space">Children:<div class="add-line"><input type="text" placeholder=""></div><div class="add-line"><input type="text" placeholder=""></div></div></div>
+  </div>
+</div>
+
+<div class="connector">&#9660;</div>
+
+<!-- FUTURE GENERATIONS -->
+<div class="generation">
+  <div class="gen-label">Next Generations &mdash; Write Your Names Below</div>
+  <div class="gen-grid" id="future-gen"></div>
+</div>
+
+<div class="scripture">
+</div>
+<p class="instructions">Family members: Write your name under the correct branch. Include your parent's name to show your connection.</p>
+
+</div><!-- end tree-container -->
+
+<div class="save-status" id="save-status">Saved</div>
+
+<script>
+// Generate future generation boxes
+var el = document.getElementById('future-gen');
+var html = '';
+for (var i = 0; i < 12; i++) {
+  html += '<div class="future-gen"><input type="text" placeholder="Branch name..." style="width:100%;border:none;border-bottom:1px solid #8b5e3c;background:transparent;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#3d1f0e;padding:4px 0;margin-bottom:8px;text-align:center;">';
+  for (var j = 0; j < 6; j++) {
+    html += '<input type="text" placeholder="Name..." style="width:100%;border:none;border-bottom:1px solid #ccc;background:transparent;font-family:Georgia,serif;font-size:12px;padding:4px 0;margin:4px 0;">';
+  }
+  html += '</div>';
+}
+el.innerHTML = html;
+
+// localStorage save/load
+var STORAGE_KEY = 'spears_family_tree_data';
+var saveTimer = null;
+var statusEl = document.getElementById('save-status');
+
+function getAllInputs() {
+  return document.querySelectorAll('input[type="text"]');
+}
+
+function saveData() {
+  var inputs = getAllInputs();
+  var data = [];
+  inputs.forEach(function(input) { data.push(input.value); });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  showSaveStatus();
+}
+
+function loadData() {
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+  try {
+    var data = JSON.parse(saved);
+    var inputs = getAllInputs();
+    data.forEach(function(val, i) {
+      if (inputs[i]) inputs[i].value = val;
+    });
+  } catch(e) {}
+}
+
+function showSaveStatus() {
+  statusEl.classList.add('show');
+  setTimeout(function() { statusEl.classList.remove('show'); }, 1500);
+}
+
+// Load saved data on page load
+loadData();
+
+// Auto-save on input change (debounced)
+document.addEventListener('input', function(e) {
+  if (e.target.tagName === 'INPUT') {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveData, 800);
+  }
+});
+</script>
+</body>
+</html>
