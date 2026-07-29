@@ -457,6 +457,8 @@ input[type="text"]:focus {
 
 <div class="save-status" id="save-status">Saved</div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 // Generate future generation boxes
 var el = document.getElementById('future-gen');
@@ -470,48 +472,72 @@ for (var i = 0; i < 12; i++) {
 }
 el.innerHTML = html;
 
-// localStorage save/load
-var STORAGE_KEY = 'spears_family_tree_data';
+// Firebase config
+var firebaseConfig = {
+  apiKey: "AIzaSyCTZLreO7TYoC32sjaxykI3Kax5M2Pl_r8",
+  authDomain: "spears-family-tree.firebaseapp.com",
+  databaseURL: "https://spears-family-tree-default-rtdb.firebaseio.com",
+  projectId: "spears-family-tree",
+  storageBucket: "spears-family-tree.firebasestorage.app",
+  messagingSenderId: "299904055971",
+  appId: "1:299904055971:web:20a71ee4225bae23af5d16"
+};
+
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var dbRef = db.ref('familyTree/inputs');
+
 var saveTimer = null;
 var statusEl = document.getElementById('save-status');
+var isLoading = true;
 
 function getAllInputs() {
   return document.querySelectorAll('input[type="text"]');
 }
 
 function saveData() {
+  if (isLoading) return;
   var inputs = getAllInputs();
-  var data = [];
-  inputs.forEach(function(input) { data.push(input.value); });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  showSaveStatus();
+  var data = {};
+  inputs.forEach(function(input, i) {
+    if (input.value.trim() !== '') {
+      data['field_' + i] = input.value;
+    }
+  });
+  dbRef.set(data).then(function() {
+    showSaveStatus();
+  });
 }
 
-function loadData() {
-  var saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return;
-  try {
-    var data = JSON.parse(saved);
-    var inputs = getAllInputs();
-    data.forEach(function(val, i) {
-      if (inputs[i]) inputs[i].value = val;
-    });
-  } catch(e) {}
+function loadData(snapshot) {
+  var data = snapshot.val();
+  if (!data) { isLoading = false; return; }
+  var inputs = getAllInputs();
+  inputs.forEach(function(input, i) {
+    var key = 'field_' + i;
+    if (data[key]) {
+      input.value = data[key];
+    }
+  });
+  isLoading = false;
 }
 
 function showSaveStatus() {
+  statusEl.textContent = 'Saved';
   statusEl.classList.add('show');
   setTimeout(function() { statusEl.classList.remove('show'); }, 1500);
 }
 
-// Load saved data on page load
-loadData();
+// Listen for real-time updates from database
+dbRef.on('value', function(snapshot) {
+  loadData(snapshot);
+});
 
 // Auto-save on input change (debounced)
 document.addEventListener('input', function(e) {
   if (e.target.tagName === 'INPUT') {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveData, 800);
+    saveTimer = setTimeout(saveData, 1000);
   }
 });
 </script>
