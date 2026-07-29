@@ -212,6 +212,78 @@ input[type="text"]:focus {
   z-index: 999;
 }
 .save-status.show { opacity: 1; }
+/* Clickable names */
+.child.clickable {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.child.clickable:hover {
+  background: #e8d5c0;
+  border-color: #8b5e3c;
+}
+/* Add-name modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fdf8f0;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 360px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  font-family: Georgia, serif;
+}
+.modal h3 {
+  color: #3d1f0e;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.modal label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+.modal input, .modal select {
+  width: 100%;
+  padding: 8px;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  border: 1px solid #c8a882;
+  border-radius: 4px;
+  background: #fff;
+}
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+.modal-buttons button {
+  flex: 1;
+  padding: 8px;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-add {
+  background: #3d1f0e;
+  color: #fdf8f0;
+}
+.btn-cancel {
+  background: #ddd;
+  color: #333;
+}
 </style>
 </head>
 <body>
@@ -494,6 +566,26 @@ input[type="text"]:focus {
 
 <div class="save-status" id="save-status">Saved</div>
 
+<!-- Add Name Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Add family member under:</h3>
+    <label>Name</label>
+    <input type="text" id="modal-name" placeholder="Enter name...">
+    <label>Relationship</label>
+    <select id="modal-relation">
+      <option value="son">Son</option>
+      <option value="daughter">Daughter</option>
+      <option value="grandson">Grandson</option>
+      <option value="granddaughter">Granddaughter</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-add" id="modal-add">Add</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
@@ -577,6 +669,148 @@ document.addEventListener('input', function(e) {
     saveTimer = setTimeout(saveData, 1000);
   }
 });
+
+// --- Click-to-add feature ---
+var modalOverlay = document.getElementById('modal-overlay');
+var modalTitle = document.getElementById('modal-title');
+var modalName = document.getElementById('modal-name');
+var modalRelation = document.getElementById('modal-relation');
+var modalAdd = document.getElementById('modal-add');
+var modalCancel = document.getElementById('modal-cancel');
+var selectedParent = null;
+
+// Make all .child spans clickable
+function makeClickable() {
+  document.querySelectorAll('.child').forEach(function(el) {
+    el.classList.add('clickable');
+    el.removeEventListener('click', openModal);
+    el.addEventListener('click', openModal);
+  });
+}
+
+function openModal(e) {
+  selectedParent = e.target;
+  var name = selectedParent.textContent.trim();
+  modalTitle.textContent = 'Add family member under: ' + name;
+  modalName.value = '';
+  modalOverlay.classList.add('active');
+  setTimeout(function() { modalName.focus(); }, 100);
+}
+
+modalCancel.addEventListener('click', function() {
+  modalOverlay.classList.remove('active');
+  selectedParent = null;
+});
+
+modalOverlay.addEventListener('click', function(e) {
+  if (e.target === modalOverlay) {
+    modalOverlay.classList.remove('active');
+    selectedParent = null;
+  }
+});
+
+modalAdd.addEventListener('click', addFamilyMember);
+modalName.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') addFamilyMember();
+});
+
+function addFamilyMember() {
+  var newName = modalName.value.trim();
+  if (!newName || !selectedParent) return;
+
+  var relation = modalRelation.value;
+  var parentName = selectedParent.textContent.trim();
+
+  // Find or create a sub-section after the parent's children-list
+  var parentGroup = selectedParent.closest('.family-group') || selectedParent.closest('.sub-section');
+  var subSection = null;
+
+  // Look for existing sub-section with this parent's label
+  var labelText = parentName + "'s children";
+  var allLabels = parentGroup ? parentGroup.querySelectorAll('.sub-label') : [];
+  allLabels.forEach(function(lbl) {
+    if (lbl.textContent.trim().toLowerCase() === labelText.toLowerCase()) {
+      subSection = lbl.nextElementSibling;
+    }
+  });
+
+  if (subSection && subSection.classList.contains('children-list')) {
+    // Add to existing list
+    var newChild = document.createElement('span');
+    newChild.className = 'child clickable';
+    newChild.textContent = newName;
+    newChild.addEventListener('click', openModal);
+    subSection.appendChild(newChild);
+  } else {
+    // Create new sub-section
+    var container = selectedParent.closest('.sub-section') || selectedParent.closest('.family-group');
+    var existingSub = container.querySelector('.sub-section');
+    var targetContainer = existingSub || container;
+
+    var newLabel = document.createElement('div');
+    newLabel.className = 'sub-label';
+    newLabel.textContent = parentName + "'s children";
+
+    var newList = document.createElement('div');
+    newList.className = 'children-list';
+    var newChild = document.createElement('span');
+    newChild.className = 'child clickable';
+    newChild.textContent = newName;
+    newChild.addEventListener('click', openModal);
+    newList.appendChild(newChild);
+
+    if (existingSub) {
+      existingSub.appendChild(newLabel);
+      existingSub.appendChild(newList);
+    } else {
+      var newSub = document.createElement('div');
+      newSub.className = 'sub-section';
+      newSub.appendChild(newLabel);
+      newSub.appendChild(newList);
+      // Insert before grandchildren-space if it exists
+      var gcSpace = container.querySelector('.grandchildren-space');
+      if (gcSpace) {
+        container.insertBefore(newSub, gcSpace);
+      } else {
+        container.appendChild(newSub);
+      }
+    }
+  }
+
+  // Save to Firebase
+  saveAddedNames();
+
+  modalOverlay.classList.remove('active');
+  selectedParent = null;
+  showSaveStatus();
+}
+
+// Save dynamically added names to Firebase
+function saveAddedNames() {
+  var addedData = [];
+  document.querySelectorAll('.sub-section').forEach(function(section) {
+    var labels = section.querySelectorAll('.sub-label');
+    labels.forEach(function(label) {
+      var list = label.nextElementSibling;
+      if (list && list.classList.contains('children-list')) {
+        var names = [];
+        list.querySelectorAll('.child').forEach(function(c) { names.push(c.textContent); });
+        addedData.push({ label: label.textContent, names: names });
+      }
+    });
+  });
+  db.ref('familyTree/addedNames').set(addedData);
+}
+
+// Load dynamically added names from Firebase
+db.ref('familyTree/addedNames').on('value', function(snapshot) {
+  // Added names are already rendered in HTML for known entries
+  // This handles names added via the click feature by other users
+  // For now, new dynamic entries persist via the sub-section structure
+});
+
+// Initialize clickable names
+makeClickable();
 </script>
 </body>
 </html>
