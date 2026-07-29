@@ -866,15 +866,18 @@ function addFamilyMember() {
 // Save dynamically added names to Firebase
 function saveAddedNames() {
   var addedData = [];
-  document.querySelectorAll('.sub-section').forEach(function(section) {
-    var labels = section.querySelectorAll('.sub-label');
-    labels.forEach(function(label) {
-      var list = label.nextElementSibling;
-      if (list && list.classList.contains('children-list')) {
-        var names = [];
-        list.querySelectorAll('.child').forEach(function(c) { names.push(c.textContent); });
-        addedData.push({ label: label.textContent, names: names });
-      }
+  document.querySelectorAll('.family-group').forEach(function(group, groupIdx) {
+    var sections = group.querySelectorAll('.sub-section');
+    sections.forEach(function(section) {
+      var labels = section.querySelectorAll('.sub-label');
+      labels.forEach(function(label) {
+        var list = label.nextElementSibling;
+        if (list && list.classList.contains('children-list')) {
+          var names = [];
+          list.querySelectorAll('.child').forEach(function(c) { names.push(c.textContent); });
+          addedData.push({ groupIdx: groupIdx, label: label.textContent, names: names });
+        }
+      });
     });
   });
   db.ref('familyTree/addedNames').set(addedData);
@@ -882,9 +885,71 @@ function saveAddedNames() {
 
 // Load dynamically added names from Firebase
 db.ref('familyTree/addedNames').on('value', function(snapshot) {
-  // Added names are already rendered in HTML for known entries
-  // This handles names added via the click feature by other users
-  // For now, new dynamic entries persist via the sub-section structure
+  var data = snapshot.val();
+  if (!data) return;
+  
+  var groups = document.querySelectorAll('.family-group');
+  
+  data.forEach(function(entry) {
+    if (!entry || !entry.label || !entry.names) return;
+    var group = groups[entry.groupIdx];
+    if (!group) return;
+    
+    // Check if this label already exists in the group
+    var existingLabel = null;
+    group.querySelectorAll('.sub-label').forEach(function(lbl) {
+      if (lbl.textContent.trim() === entry.label.trim()) existingLabel = lbl;
+    });
+    
+    if (existingLabel) {
+      // Update existing list with any new names
+      var list = existingLabel.nextElementSibling;
+      if (list && list.classList.contains('children-list')) {
+        var currentNames = [];
+        list.querySelectorAll('.child').forEach(function(c) { currentNames.push(c.textContent); });
+        entry.names.forEach(function(name) {
+          if (currentNames.indexOf(name) === -1) {
+            var newChild = document.createElement('span');
+            newChild.className = 'child clickable';
+            newChild.textContent = name;
+            newChild.addEventListener('click', openModal);
+            list.appendChild(newChild);
+          }
+        });
+        // Remove names no longer in data
+        list.querySelectorAll('.child').forEach(function(c) {
+          if (entry.names.indexOf(c.textContent) === -1) c.remove();
+        });
+      }
+    } else {
+      // Create new sub-section
+      var container = group.querySelector('.sub-section');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'sub-section';
+        var gcSpace = group.querySelector('.grandchildren-space');
+        if (gcSpace) {
+          group.insertBefore(container, gcSpace);
+        } else {
+          group.appendChild(container);
+        }
+      }
+      var newLabel = document.createElement('div');
+      newLabel.className = 'sub-label';
+      newLabel.textContent = entry.label;
+      var newList = document.createElement('div');
+      newList.className = 'children-list';
+      entry.names.forEach(function(name) {
+        var newChild = document.createElement('span');
+        newChild.className = 'child clickable';
+        newChild.textContent = name;
+        newChild.addEventListener('click', openModal);
+        newList.appendChild(newChild);
+      });
+      container.appendChild(newLabel);
+      container.appendChild(newList);
+    }
+  });
 });
 
 // Initialize clickable names
