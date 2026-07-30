@@ -611,13 +611,12 @@ input[type="text"]:focus {
       </select>
     </div>
     <div class="modal-buttons" id="modal-buttons-add">
-      <button class="btn-cancel" id="modal-cancel">Cancel</button>
       <button class="btn-add" id="modal-add">Add Child</button>
     </div>
     <div class="modal-buttons" id="modal-buttons-edit" style="display:none;">
-      <button class="btn-cancel" id="modal-cancel2">Cancel</button>
       <button class="btn-edit" id="modal-edit">Save Edit</button>
       <button class="btn-delete" id="modal-delete">Delete</button>
+      <button class="btn-cancel" id="modal-cancel">Close</button>
     </div>
   </div>
 </div>
@@ -713,7 +712,6 @@ var modalName = document.getElementById('modal-name');
 var modalRelation = document.getElementById('modal-relation');
 var modalAdd = document.getElementById('modal-add');
 var modalCancel = document.getElementById('modal-cancel');
-var modalCancel2 = document.getElementById('modal-cancel2');
 var modalEdit = document.getElementById('modal-edit');
 var modalDelete = document.getElementById('modal-delete');
 var modalAddSection = document.getElementById('modal-add-section');
@@ -755,7 +753,6 @@ function closeModal() {
 }
 
 modalCancel.addEventListener('click', closeModal);
-modalCancel2.addEventListener('click', closeModal);
 
 modalOverlay.addEventListener('click', function(e) {
   if (e.target === modalOverlay) closeModal();
