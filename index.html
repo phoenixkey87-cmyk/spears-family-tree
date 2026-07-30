@@ -769,6 +769,7 @@ modalEdit.addEventListener('click', function() {
   if (newName && newName.trim() !== '') {
     selectedParent.textContent = newName.trim();
     saveAddedNames();
+    saveNameEdits();
     showSaveStatus();
   }
   closeModal();
@@ -781,9 +782,31 @@ modalDelete.addEventListener('click', function() {
   if (confirm('Remove "' + name + '" from the tree?')) {
     selectedParent.remove();
     saveAddedNames();
+    saveNameEdits();
     showSaveStatus();
   }
   closeModal();
+});
+
+// Save all name edits (captures current state of all .child elements)
+function saveNameEdits() {
+  var allNames = [];
+  document.querySelectorAll('.child').forEach(function(el, i) {
+    allNames.push(el.textContent);
+  });
+  db.ref('familyTree/nameEdits').set(allNames);
+}
+
+// Load name edits from Firebase
+db.ref('familyTree/nameEdits').once('value', function(snapshot) {
+  var data = snapshot.val();
+  if (!data) return;
+  var allChildren = document.querySelectorAll('.child');
+  allChildren.forEach(function(el, i) {
+    if (data[i] && data[i] !== el.textContent) {
+      el.textContent = data[i];
+    }
+  });
 });
 
 // ADD child
