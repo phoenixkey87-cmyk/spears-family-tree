@@ -790,14 +790,11 @@ modalDelete.addEventListener('click', function() {
 
 // Save all name edits (captures current state of all .child elements)
 function saveNameEdits() {
-  var allNames = [];
-  document.querySelectorAll('.child').forEach(function(el, i) {
-    allNames.push(el.textContent);
-  });
-  db.ref('familyTree/nameEdits').set(allNames);
+  // Now handled by saveAddedNames using parent-name keys
+  saveAddedNames();
 }
 
-// Load name edits from Firebase
+// Load name edits from Firebase (legacy - kept for backwards compatibility)
 db.ref('familyTree/nameEdits').once('value', function(snapshot) {
   var data = snapshot.val();
   if (!data) return;
@@ -888,90 +885,96 @@ function addFamilyMember() {
 
 // Save dynamically added names to Firebase
 function saveAddedNames() {
-  var addedData = [];
-  document.querySelectorAll('.family-group').forEach(function(group, groupIdx) {
-    var sections = group.querySelectorAll('.sub-section');
-    sections.forEach(function(section) {
-      var labels = section.querySelectorAll('.sub-label');
-      labels.forEach(function(label) {
-        var list = label.nextElementSibling;
-        if (list && list.classList.contains('children-list')) {
-          var names = [];
-          list.querySelectorAll('.child').forEach(function(c) { names.push(c.textContent); });
-          addedData.push({ groupIdx: groupIdx, label: label.textContent, names: names });
-        }
-      });
+  var addedData = {};
+  document.querySelectorAll('.family-group').forEach(function(group) {
+    var coupleEl = group.querySelector('.couple');
+    if (!coupleEl) return;
+    var groupName = coupleEl.textContent.trim().split('\n')[0].trim();
+    
+    var sections = group.querySelectorAll('.sub-section .sub-label');
+    sections.forEach(function(label) {
+      var list = label.nextElementSibling;
+      if (list && list.classList.contains('children-list')) {
+        var names = [];
+        list.querySelectorAll('.child').forEach(function(c) { names.push(c.textContent); });
+        var key = groupName + '|||' + label.textContent.trim();
+        addedData[key] = names;
+      }
     });
   });
-  db.ref('familyTree/addedNames').set(addedData);
+  db.ref('familyTree/treeData').set(addedData);
 }
 
 // Load dynamically added names from Firebase
-db.ref('familyTree/addedNames').on('value', function(snapshot) {
+var treeDataLoaded = false;
+db.ref('familyTree/treeData').on('value', function(snapshot) {
   var data = snapshot.val();
-  if (!data) return;
+  if (!data || treeDataLoaded) return;
+  treeDataLoaded = true;
   
-  var groups = document.querySelectorAll('.family-group');
-  
-  data.forEach(function(entry) {
-    if (!entry || !entry.label || !entry.names) return;
-    var group = groups[entry.groupIdx];
-    if (!group) return;
+  document.querySelectorAll('.family-group').forEach(function(group) {
+    var coupleEl = group.querySelector('.couple');
+    if (!coupleEl) return;
+    var groupName = coupleEl.textContent.trim().split('\n')[0].trim();
     
-    // Check if this label already exists in the group
-    var existingLabel = null;
-    group.querySelectorAll('.sub-label').forEach(function(lbl) {
-      if (lbl.textContent.trim() === entry.label.trim()) existingLabel = lbl;
-    });
-    
-    if (existingLabel) {
-      // Update existing list with any new names
-      var list = existingLabel.nextElementSibling;
-      if (list && list.classList.contains('children-list')) {
-        var currentNames = [];
-        list.querySelectorAll('.child').forEach(function(c) { currentNames.push(c.textContent); });
-        entry.names.forEach(function(name) {
-          if (currentNames.indexOf(name) === -1) {
-            var newChild = document.createElement('span');
-            newChild.className = 'child clickable';
-            newChild.textContent = name;
-            newChild.addEventListener('click', openModal);
-            list.appendChild(newChild);
-          }
-        });
-        // Remove names no longer in data
-        list.querySelectorAll('.child').forEach(function(c) {
-          if (entry.names.indexOf(c.textContent) === -1) c.remove();
-        });
-      }
-    } else {
-      // Create new sub-section
-      var container = group.querySelector('.sub-section');
-      if (!container) {
-        container = document.createElement('div');
-        container.className = 'sub-section';
-        var gcSpace = group.querySelector('.grandchildren-space');
-        if (gcSpace) {
-          group.insertBefore(container, gcSpace);
-        } else {
-          group.appendChild(container);
-        }
-      }
-      var newLabel = document.createElement('div');
-      newLabel.className = 'sub-label';
-      newLabel.textContent = entry.label;
-      var newList = document.createElement('div');
-      newList.className = 'children-list';
-      entry.names.forEach(function(name) {
-        var newChild = document.createElement('span');
-        newChild.className = 'child clickable';
-        newChild.textContent = name;
-        newChild.addEventListener('click', openModal);
-        newList.appendChild(newChild);
+    Object.keys(data).forEach(function(key) {
+      var parts = key.split('|||');
+      if (parts[0] !== groupName) return;
+      var labelText = parts[1];
+      var names = data[key];
+      if (!names || !names.length) return;
+      
+      // Check if this label already exists
+      var existingLabel = null;
+      group.querySelectorAll('.sub-label').forEach(function(lbl) {
+        if (lbl.textContent.trim() === labelText) existingLabel = lbl;
       });
-      container.appendChild(newLabel);
-      container.appendChild(newList);
-    }
+      
+      if (existingLabel) {
+        // Update existing list
+        var list = existingLabel.nextElementSibling;
+        if (list && list.classList.contains('children-list')) {
+          var currentNames = [];
+          list.querySelectorAll('.child').forEach(function(c) { currentNames.push(c.textContent); });
+          names.forEach(function(name) {
+            if (currentNames.indexOf(name) === -1) {
+              var newChild = document.createElement('span');
+              newChild.className = 'child clickable';
+              newChild.textContent = name;
+              newChild.addEventListener('click', openModal);
+              list.appendChild(newChild);
+            }
+          });
+        }
+      } else {
+        // Create new sub-section
+        var container = group.querySelector('.sub-section');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'sub-section';
+          var gcSpace = group.querySelector('.grandchildren-space');
+          if (gcSpace) {
+            group.insertBefore(container, gcSpace);
+          } else {
+            group.appendChild(container);
+          }
+        }
+        var newLabel = document.createElement('div');
+        newLabel.className = 'sub-label';
+        newLabel.textContent = labelText;
+        var newList = document.createElement('div');
+        newList.className = 'children-list';
+        names.forEach(function(name) {
+          var newChild = document.createElement('span');
+          newChild.className = 'child clickable';
+          newChild.textContent = name;
+          newChild.addEventListener('click', openModal);
+          newList.appendChild(newChild);
+        });
+        container.appendChild(newLabel);
+        container.appendChild(newList);
+      }
+    });
   });
 });
 
