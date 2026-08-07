@@ -25,6 +25,23 @@ h1 {
   border-bottom: 4px double #3d1f0e;
   padding-bottom: 10px;
 }
+.title-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 85vh;
+  text-align: center;
+  page-break-after: always;
+}
+.title-page h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+.title-page .subtitle {
+  font-size: 18px;
+  margin-bottom: 40px;
+}
 .subtitle {
   text-align: center;
   font-size: 16px;
@@ -345,8 +362,15 @@ input[type="text"]:focus {
 </style>
 </head>
 <body>
-<h1>Spears Family</h1>
-<p class="subtitle">"Even so every good tree bringeth forth good fruit" &mdash; Matthew 7:17a</p>
+
+<div class="title-page">
+  <h1>Spears Family</h1>
+  <p class="subtitle">"Even so every good tree bringeth forth good fruit" &mdash; Matthew 7:17a</p>
+  <div class="roots-box">
+    <div class="names">Mingo Spears &amp; Priscilla Joyner Chandler</div>
+    <div class="location">Liberty, Mississippi &bull; The Root of Our Family</div>
+  </div>
+</div>
 
 <div class="tree-container">
 
@@ -371,7 +395,7 @@ input[type="text"]:focus {
 </div>
 <div class="connector">&#9660;</div>
 
-<!-- ROOTS -->
+<!-- ROOTS (inline after deep roots) -->
 <div class="generation">
   <div class="roots-box">
     <div class="names">Mingo Spears &amp; Priscilla Joyner Chandler</div>
