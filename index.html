@@ -153,6 +153,35 @@ h1 {
 }
 .write-lines { display: flex; flex-direction: column; gap: 12px; }
 .write-line { border-bottom: 1px solid #bbb; height: 20px; }
+/* Print styles */
+@media print {
+  body { background: white !important; padding: 0.25in; }
+  .save-status, .modal-overlay { display: none !important; }
+  .instructions { page-break-before: avoid; }
+  input[type="text"] {
+    border-bottom: 1px solid #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .future-gen {
+    border: 1px solid #666;
+    page-break-inside: avoid;
+  }
+  .family-group {
+    page-break-inside: avoid;
+  }
+  .generation {
+    page-break-inside: avoid;
+  }
+  .roots-box {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .child {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 .scripture {
   text-align: center;
   font-style: italic;
@@ -606,15 +635,15 @@ input[type="text"]:focus {
 
 <div class="connector">&#9660;</div>
 
-<!-- FUTURE GENERATIONS -->
+<!-- FUTURE GENERATIONS - SIGN-IN -->
 <div class="generation">
-  <div class="gen-label">Next Generations &mdash; Write Your Names Below</div>
+  <div class="gen-label">Write Your Names Below and Which Branch You're From</div>
   <div class="gen-grid" id="future-gen"></div>
 </div>
 
 <div class="scripture">
 </div>
-<p class="instructions">Family members: Write your name under the correct branch. Include your parent's name to show your connection.</p>
+<p class="instructions">Family members: Write your name and the branch you belong to (e.g. "Charlie &rarr; Otis &rarr; Harry Otis")</p>
 
 </div><!-- end tree-container -->
 
@@ -653,9 +682,9 @@ input[type="text"]:focus {
 var el = document.getElementById('future-gen');
 var html = '';
 for (var i = 0; i < 12; i++) {
-  html += '<div class="future-gen"><input type="text" placeholder="Branch name..." style="width:100%;border:none;border-bottom:1px solid #8b5e3c;background:transparent;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#3d1f0e;padding:4px 0;margin-bottom:8px;text-align:center;">';
+  html += '<div class="future-gen"><input type="text" placeholder="Branch:" style="width:100%;border:none;border-bottom:2px solid #8b5e3c;background:transparent;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#3d1f0e;padding:4px 0;margin-bottom:8px;text-align:left;">';
   for (var j = 0; j < 6; j++) {
-    html += '<input type="text" placeholder="Name..." style="width:100%;border:none;border-bottom:1px solid #ccc;background:transparent;font-family:Georgia,serif;font-size:12px;padding:4px 0;margin:4px 0;">';
+    html += '<input type="text" placeholder="" style="width:100%;border:none;border-bottom:1px solid #999;background:transparent;font-family:Georgia,serif;font-size:12px;padding:4px 0;margin:4px 0;">';
   }
   html += '</div>';
 }
